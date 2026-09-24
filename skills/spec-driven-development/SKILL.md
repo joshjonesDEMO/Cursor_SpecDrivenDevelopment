@@ -17,7 +17,7 @@ The spec is the source of truth, not the prompt. A prompt is temporary and narro
 These hold in every phase.
 
 1. **Name the phase.** Start every reply with `Phase: <name>` and, when stopping, `Gate: <what needs approval>`.
-2. **Gates stop the turn.** At a gate, present the artifact summary and end the turn. Only an explicit approval ("approved", "yes", "go") passes a gate. Feedback means revise and present again.
+2. **Gates stop the turn.** At a gate, present the artifact summary and end the turn. A gate passes only through its approval channel from [settings.md](settings.md): an explicit "approved", "yes", or "go" in chat by default, or an approving review on the spec PR. Feedback means revise and present again.
 3. **State lives in one field.** The `Status` in `spec.md` is the feature's only state. Change it exactly as the Status lifecycle below says, and add a dated line to the spec's `Log` each time. A new session trusts this field, not memory.
 4. **No code before tasks approval.** Production code and tests are written only once the status is `Tasks approved` or later. Reading code, running commands, and throwaway spikes that answer a question are allowed earlier. The Skip track is the only exception.
 5. **Never resolve ambiguity silently.** Mark it `[NEEDS CLARIFICATION: <question>]` and run a clarify round (see Phase 3). Any phase may run one.
@@ -66,7 +66,7 @@ Run this before Phase 0 on every invocation.
 
 1. Pick the feature. Use the one the user named. Otherwise use the only spec whose status is not `Implemented`, `Superseded`, `Baseline draft`, or `Baseline`. If there are several, ask. If there are none, or the user describes new work, start at Phase 0.
 2. If the spec's `Amends` field names a baseline with status `Baseline draft`, re-present the baseline review gate from [brownfield.md](brownfield.md).
-3. Otherwise go where the lifecycle table says. In Implement, any `[?]` task blocks until resolved. Report `[!]` tasks before continuing.
+3. Otherwise go where the lifecycle table says. If the pending gate uses `pull-request` approval, check the PR first. In Implement, any `[?]` task blocks until resolved. Report `[!]` tasks before continuing.
 4. Report the feature, the status, and what is pending, then continue.
 
 ## Phase 0: Size gate
@@ -85,7 +85,9 @@ State the track and the one-line reason at the top of the reply. For Lite and Fu
 
 ## Phase 1: Orient
 
-1. Read `specs/constitution.md`. If it is missing, check `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/`. If there is no project-level guidance, offer to draft a constitution from [templates/constitution.md](templates/constitution.md) as its own gate. Don't block Lite work on it.
+1. **Constitution.** Read `specs/constitution.md` and its `Workflow settings` ([settings.md](settings.md)).
+   - **Full track:** the constitution must exist with status `Ratified` before Specify. If it is missing or `Draft`, draft it from [templates/constitution.md](templates/constitution.md), seeded from `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`, and the repo's CI config. Present it at a **Constitution gate**, and set it to `Ratified` on approval.
+   - **Lite track:** use the constitution if one exists. Otherwise fall back to `AGENTS.md` and the rules, with default settings.
 2. If the request references a ticket (Linear, Jira, GitHub issue), pull it per [tickets.md](tickets.md).
 3. Extend the Phase 0 scan into an impact scan. Find existing patterns to reuse, likely touched files, related prior specs under `specs/`, and ripple effects. This stops the spec from duplicating existing code or fighting established conventions.
 4. **Living specs.** If an existing `Baseline` or `Implemented` spec already defines behavior this change touches, list it in the new spec's `Amends` field and write a `Delta from <spec>` section for it (see [brownfield.md](brownfield.md) for the format).
@@ -110,7 +112,7 @@ Requirement quality bar:
 - Bad: `The system should robustly handle all authentication edge cases.`
 - `Must not` entries prevent plausible mistakes. Don't restate the inverse of a `Must`.
 
-On Full track, run the `spec-critic` subagent before Clarify (optional on Lite). Give it the spec path, the constitution path, and the impact scan summary. Fold in the findings that change behavior, tests, security, or architecture.
+On Full track, run the `spec-critic` subagent before Clarify (optional on Lite), using the model from the `Critic model` setting. Give it the spec path, the constitution path, and the impact scan summary. Fold in the findings that change behavior, tests, security, or architecture.
 
 ## Phase 3: Clarify
 
@@ -180,7 +182,7 @@ Task states: `[ ]` open, `[x]` done (check passed), `[-]` skipped (reason requir
 The implementing agent is biased toward its own output. An independent pass does the final check.
 
 1. Run the project's full verification sequence (tests, lint, typecheck, build) as defined by its CI config or scripts.
-2. Dispatch the `spec-verifier` subagent with the spec, plan, and tasks paths, every spec listed in `Amends`, and the diff scope (branch or files).
+2. Dispatch the `spec-verifier` subagent, using the model from the `Verifier model` setting. Give it the spec, plan, and tasks paths, every spec listed in `Amends`, and the diff scope (branch or files).
 3. Fix every `not met` item, violation, and regression, then verify again. Spec drift is a `not met` finding. Resolve it by fixing the code, or by reopening the spec per rule 6. Never by quietly editing the spec. For each `unverifiable` item, add the missing check, or carry it to Gate 4 as a stated gap.
 4. Set status `Delivery pending`.
 
@@ -196,7 +198,7 @@ If the feedback needs code changes within the approved spec, reset the affected 
 On approval:
 
 1. Apply each approved delta to the spec it amends, so every living spec describes current behavior. This doesn't change the amended spec's status, except that a feature spec whose behavior was fully replaced becomes `Superseded`.
-2. Set status `Implemented`, open the PR per the team's workflow, and post the ticket sync from [tickets.md](tickets.md) if a ticket is linked. The specs ship in the same PR as the code.
+2. Set status `Implemented`. Open the PR per the team's workflow, or mark the existing spec PR ready for review. Then post the ticket sync from [tickets.md](tickets.md) if a ticket is linked. The specs ship in the same PR as the code.
 
 ## Anti-patterns
 
@@ -205,9 +207,8 @@ On approval:
 - **Plan mode as a substitute.** An in-chat plan with no file on disk and no gate is not SDD. The artifacts must persist.
 - **Duplicating the constitution.** Don't restate project-wide rules in each spec. Reference them.
 
-## Subagents
+## Plugin components
 
-This plugin ships two subagents:
-
-- `spec-critic` reads a draft spec cold and finds ambiguity before Gate 1. Read-only.
-- `spec-verifier` checks the implementation against the spec, requirement by requirement, in Phase 7. It runs checks but does not edit files.
+- `spec-critic` subagent reads a draft spec cold and finds ambiguity before Gate 1. Read-only.
+- `spec-verifier` subagent checks the implementation against the spec, requirement by requirement, in Phase 7. It runs checks but does not edit files.
+- An optional hook enforces rule 4 and the file map when `Enforce gates: on` (see [settings.md](settings.md)). If it denies an edit, follow its message: finish the current gate, or propose a plan change. Never route the edit through the shell or a subagent to get around it.

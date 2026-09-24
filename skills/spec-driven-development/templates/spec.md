@@ -98,10 +98,16 @@ Scenario: <edge or error case>
 - YYYY-MM-DD. Status: Draft. Spec created.
 
 <!--
-LITE TRACK ONLY: append these two sections instead of creating plan.md and tasks.md.
+LITE TRACK ONLY: replace this comment with these two sections instead of creating plan.md and tasks.md.
 
 ## Plan
-Short form of templates/plan.md: data shape, approach, file map (table), test strategy, definition of done.
+Short form of templates/plan.md: data shape, approach, test strategy, definition of done, and this file map.
+
+### File map
+
+| File | Change | Covers |
+|------|--------|--------|
+| `path/to/file.ts` | Modify. <what changes> | FR-001 |
 
 ## Tasks
 Same format, states, and coverage check as templates/tasks.md.

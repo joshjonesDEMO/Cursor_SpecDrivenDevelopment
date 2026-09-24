@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "node \"${CURSOR_PLUGIN_ROOT}/hooks/enforce-gates.mjs\"",
+        "matcher": "Write|Delete",
+        "timeout": 5,
+        "failClosed": false
+      }
+    ]
+  }
+}

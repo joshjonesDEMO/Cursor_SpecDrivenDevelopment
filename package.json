@@ -1,0 +1,10 @@
+{
+  "name": "cursor-spec-driven-development",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test hooks/"
+  }
+}

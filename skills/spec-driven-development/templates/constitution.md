@@ -1,10 +1,22 @@
 # Constitution: <Project Name>
 
+**Status:** Draft | Ratified
 **Version:** 1.0.0
 **Ratified:** YYYY-MM-DD
 **Last amended:** YYYY-MM-DD
 
 Project-wide principles that every spec, plan, and task must respect. Keep this short. Each principle should change a real implementation or review decision. If removing a line would not change a reasonable decision, delete it.
+
+## Workflow settings
+
+<!-- Read by the spec-driven-development skill and its gate hook. Keep the exact `- Key: value` format. See the skill's settings.md for every option. -->
+
+- Enforce gates: off
+- Spec approval: chat
+- Plan approval: chat
+- Tasks approval: chat
+- Critic model: ask
+- Verifier model: ask
 
 ## Platform
 
@@ -43,4 +55,5 @@ The verification sequence every change must pass before review:
 ## Governance
 
 - Amending this file requires review from: <team or role>
-- Bump the version on every amendment. Major for removed or redefined principles, minor for additions, patch for wording.
+- Bump the version on every amendment. Major for removed or redefined principles, minor for additions, patch for wording and for `Workflow settings` changes.
+- `Workflow settings` changes don't need principle review. Agents can't turn `Enforce gates` off; a person does that in the editor.
