@@ -6,10 +6,54 @@ The spec lives in your repo next to the code, so it carries over between session
 
 ## How it works
 
-```text
-Size check -> Spec -> [approve] -> Plan -> [approve] -> Tasks -> [approve]
-           -> Build, one task at a time -> Verify against the spec -> [approve] -> PR
+```mermaid
+flowchart TD
+  start(["/spec-driven-development or mode"]) --> resume{"Resume<br/>read Status in spec.md"}
+  resume -->|"active spec"| cont["Continue where Status points<br/>check PR approval if pending"]
+  resume -->|"no request"| empty["Ask what to build, end turn"]
+  resume -->|"new request"| size{"Phase 0: size gate"}
+
+  size -->|"Skip: small, low-risk"| skip["Confirm in chat, then implement<br/>no spec, no gates, hook not bound"]
+  size -->|"Lite or Full"| orient
+
+  subgraph zone1["Hook stage 1 · Status Draft to Plan approved · edits outside specs/ denied"]
+    orient["Phase 1: Orient<br/>constitution gate on Full · ticket · impact scan"]
+    specify["Phase 2: Specify<br/>Status: Draft · chat binds to feature"]
+    criticRun["spec-critic review · Full"]
+    clarify["Phase 3: Clarify"]
+    g1lite{{"Gate 1 Lite: spec + plan + tasks<br/>chat or PR @handle"}}
+    g1{{"Gate 1: spec<br/>chat or PR @handle"}}
+    plan["Phase 4: Plan · file map"]
+    g2{{"Gate 2: plan<br/>chat or PR @handle"}}
+    tasks["Phase 5: Tasks · coverage check"]
+    g3{{"Gate 3: tasks<br/>chat or PR @handle"}}
+  end
+
+  subgraph zone2["Hook stage 2 · Status Tasks approved to Delivery pending · edits outside the file map denied"]
+    implement["Phase 6: Implement<br/>Status: In progress"]
+    verify["Phase 7: Verify<br/>full checks + spec-verifier"]
+    g4{{"Gate 4: delivery<br/>chat only"}}
+  end
+
+  orient --> specify
+  specify -->|"Full"| criticRun --> clarify
+  specify -->|"Lite"| clarify
+  clarify -->|"Lite"| g1lite
+  clarify -->|"Full"| g1
+  g1 -->|"Status: Spec approved"| plan --> g2
+  g2 -->|"Status: Plan approved"| tasks --> g3
+  g1lite -->|"Status: Tasks approved"| implement
+  g3 -->|"Status: Tasks approved"| implement
+  implement --> verify
+  verify -->|"Status: Delivery pending"| g4
+  g4 -->|"Status: Implemented"| done(["Hook releases the chat<br/>PR with specs + code · ticket sync"])
+
+  implement -.->|"spec or plan is wrong"| reopen["Reopen owning gate<br/>Status rolls back"]
+  reopen -.-> clarify
+  g4 -.->|"code changes needed"| implement
 ```
+
+The hook stages apply only with `Enforce gates: on` (see [Settings](#settings)).
 
 The agent picks a track based on the size of the change, and you can override it:
 
@@ -100,11 +144,51 @@ If the tracker isn't connected yet, the agent offers to install its Cursor plugi
 | `agents/spec-verifier.md` | Checks the build against the spec |
 | `hooks/` | Optional gate enforcement, off by default |
 
+How the pieces connect, where state lives, and how approvals flow:
+
+```mermaid
+flowchart TB
+  subgraph plugin["Plugin repo · registered by .cursor-plugin/plugin.json"]
+    direction LR
+    skill["skills/spec-driven-development/<br/>SKILL.md: mode + command<br/>settings · tickets · brownfield · templates"]
+    critic["agents/spec-critic.md<br/>read-only spec review"]
+    verifier["agents/spec-verifier.md<br/>checks build against spec"]
+    hook["hooks/enforce-gates.mjs<br/>preToolUse on Write | Delete<br/>off unless Enforce gates: on"]
+  end
+
+  subgraph approvals["Approval channels"]
+    direction LR
+    chat["Chat<br/>developer says approved, yes, or go<br/>default for Gates 1–3, always Gate 4"]
+    prReview["GitHub draft PR<br/>only listed @handles count<br/>Gates 1–3 when set to pull-request"]
+  end
+
+  tracker["Tracker<br/>Linear · Jira · Notion · GitHub · Azure DevOps<br/>via MCP or CLI"]
+  bindings[("OS temp dir<br/>cursor-sdd-gates/*.json<br/>chat-to-feature bindings")]
+
+  subgraph repo["Your repo"]
+    direction LR
+    constitution["specs/constitution.md<br/>Workflow settings: Enforce gates,<br/>approval channels, models, Tracker"]
+    feature["specs/feature-id/<br/>spec.md: Status + Log, the only state<br/>plan.md: file map · tasks.md: task states"]
+    code["Source code"]
+  end
+
+  skill -->|"ticket intake and export"| tracker
+  skill -->|"presents gate, ends turn"| chat
+  skill -->|"pushes artifacts, requests review"| prReview
+  skill -->|"writes from templates"| feature
+  chat -->|"agent sets next Status"| feature
+  prReview -->|"approval checked on Resume"| feature
+
+  critic -.->|"reads"| feature
+  verifier -.->|"reads, runs checks"| code
+
+  hook <-->|"bind and release"| bindings
+  hook -.->|"reads settings"| constitution
+  hook -.->|"reads Status and file map"| feature
+  hook ==>|"allow or deny agent edit"| code
+```
+
 Run the hook's tests with `npm test`.
-
-## Credits
-
-Built on ideas from [SpecDD](https://specdd.ai/), [GitHub Spec Kit](https://github.com/github/spec-kit), [DataCamp](https://www.datacamp.com/tutorial/spec-driven-development-with-claude-code), [IBM](https://www.ibm.com/think/topics/spec-driven-development), and [Augment Code](https://www.augmentcode.com/guides/what-is-spec-driven-development).
 
 ## License
 
