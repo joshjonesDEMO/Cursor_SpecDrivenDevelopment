@@ -9,6 +9,7 @@
   "homepage": "https://github.com/joshjonesDEMO/Cursor_SpecDrivenDevelopment",
   "repository": "https://github.com/joshjonesDEMO/Cursor_SpecDrivenDevelopment",
   "license": "MIT",
+  "logo": "assets/logo.png",
   "keywords": [
     "spec-driven-development",
     "sdd",
