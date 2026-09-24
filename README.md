@@ -87,7 +87,9 @@ Full details: [settings.md](skills/spec-driven-development/settings.md).
 
 Share a ticket link or key and the agent drafts the spec from it. After approval, it can also create tasks back in your tracker and link the PR.
 
-There are built-in instructions for **Linear**, **Jira Cloud**, **Notion**, **GitHub Issues**, and **Azure DevOps**. They work once that tracker's MCP server is connected in Cursor. Jira, GitHub, and Azure DevOps also work through their CLIs. Other trackers (including self-hosted Jira) work through their MCP server, CLI, or API, and pasted ticket text works anywhere. Details: [tickets.md](skills/spec-driven-development/tickets.md).
+There are built-in instructions for **Linear**, **Jira Cloud**, **Notion**, **GitHub Issues**, and **Azure DevOps**. They work once that tracker's MCP server is connected in Cursor. Jira, GitHub, and Azure DevOps also work through their CLIs. Other trackers (including self-hosted Jira) work through their MCP server, CLI, or API, and pasted ticket text works anywhere.
+
+If the tracker isn't connected yet, the agent offers to install its Cursor plugin and sign you in, then carries on. Azure DevOps has no Cursor plugin, so the agent explains the manual setup instead. Details: [tickets.md](skills/spec-driven-development/tickets.md).
 
 ## What's included
 

@@ -9,7 +9,7 @@ Jump to: [Linear](#linear) · [Jira](#jira) · [Notion](#notion) · [GitHub Issu
 1. **A full URL decides.** Match it against the table below.
 2. **A bare key** (`ENG-123`, `#123`) uses the `Tracker` setting from [settings.md](settings.md).
    - With `auto`, check which integrations are connected.
-   - `ABC-123` fits Linear, Jira, and Notion unique IDs. Ask if more than one is connected.
+   - `ABC-123` fits Linear, Jira, and Notion unique IDs. Ask if more than one is connected, or which tracker it belongs to if none is.
 3. **`Tracker: none`** means no tracker calls. Work from pasted ticket text, and export copy-ready markdown.
 
 | Tracker | URL shape | ID shape | Feature ID |
@@ -24,7 +24,25 @@ Self-hosted Jira (Server or Data Center) isn't covered by Atlassian's cloud MCP 
 
 ## Connect
 
-Each section lists the usual MCP tools, plus a CLI fallback where one exists. Tool names change between server versions, so read the connected server's tool list and schemas before calling anything. If nothing is connected, ask the user to paste the ticket, and offer copy-ready task text for export.
+Check the connection before any tracker call, and fix only what is missing. Skip this for ticket work when `Tracker: none`.
+
+1. **Connected.** A connected MCP server for the tracker, or its CLI installed and signed in, counts. Continue with that tracker's section below.
+2. **Installed, not signed in.** If the MCP server reports that it needs authentication, tell the user which tracker needs a sign-in and why, then call that server's `mcp_auth` tool. If the CLI is installed but signed out, ask the user to run its login command in their terminal (for example `gh auth login`). Retry once it succeeds.
+3. **Not installed.** Tell the user which plugin is needed and for what, then call `install_plugin` with the slug from the table below. It opens Cursor's install confirm and waits for the user. After it installs, sign in per step 2 if the server asks.
+4. **No plugin, cancelled, or failed.** Give the manual route from the table. For ticket intake, also offer to work from pasted ticket text. For export, offer copy-ready task text. Don't offer the same install or sign-in again in this conversation unless the user asks.
+
+`install_plugin` and `mcp_auth` are Cursor agent tools, and may only appear in a dynamically listed tool namespace. If you can't find them, go straight to step 4. Never ask for a token in chat.
+
+| Tracker | Cursor plugin | Manual route |
+|---------|---------------|--------------|
+| Linear | `linear` | Add Linear's hosted MCP server (`https://mcp.linear.app/mcp`) in Cursor's MCP settings |
+| Jira Cloud | `atlassian` | Add Atlassian's Rovo MCP server in Cursor's MCP settings, or use the Atlassian CLI (`acli`) |
+| Notion | `notion-workspace` | Add Notion's hosted MCP server in Cursor's MCP settings |
+| GitHub Issues | `github` | `gh auth login` |
+| Azure DevOps | None | Add Microsoft's Azure DevOps MCP server in Cursor's MCP settings, or install the `az` CLI with the `azure-devops` extension and run `az login` |
+| Self-hosted Jira, others | See [Other trackers](#other-trackers) | Pasted ticket text, per [Other trackers](#other-trackers) item 6 |
+
+Each tracker section lists the usual MCP tools, plus a CLI fallback where one exists. Tool names change between server versions, so read the connected server's tool list and schemas before calling anything.
 
 Never guess IDs, project keys, team names, or account IDs. Read them from the ticket or a lookup call, or ask.
 
@@ -119,7 +137,7 @@ Every tracker write (creating tickets, commenting, changing status) is an extern
 
 For Shortcut, Asana, ClickUp, YouTrack, GitLab, Trello, Monday, Plane, ServiceNow, self-hosted Jira, and others:
 
-1. **Connect** in this order: a connected MCP server, then the tracker's CLI if installed (for example `glab` for GitLab), then its REST API with a token the user already has in an environment variable. Never ask for a token in chat.
+1. **Connect** in this order: a connected MCP server, then the tracker's CLI if installed (for example `glab` for GitLab), then its REST API with a token the user already has in an environment variable. If none works, run [Connect](#connect) from step 2 with the tracker's name. `install_plugin` shows nothing when no plugin matches, so if nothing installs, use item 6 below. Self-hosted Jira must not use the `atlassian` plugin, which only reaches Jira Cloud. Never ask for a token in chat.
 2. **Map** the tracker's fields to the intake fields: ID and URL, title, description, acceptance criteria, parent or children, and comments. Tell the user which field you used for acceptance criteria.
 3. **Children:** use the tracker's native parent/child or subtask link if it has one. Otherwise link back to the source ticket in each new ticket's body.
 4. **PR linking:** use the tracker's closing keyword if it has one (for example `Closes #123` in GitLab). Otherwise paste the PR URL into each ticket.

@@ -30,7 +30,7 @@ Changing only this section is a settings change. Bump the constitution's patch v
    - At the first PR gate, run `gh pr create --draft --title "Spec: <feature name>" --body "<body>" --reviewer <handles>`. If a ticket is linked, put its key in the title and the tracker's PR-linking reference ([tickets.md](tickets.md)) in the body.
    - At later gates, run `gh pr edit <url> --add-reviewer <handles>`.
    - Put the pending gate and links to the artifacts in the PR body. Record the PR URL in the spec's `Log`.
-   - If `gh` is unavailable, use the GitHub MCP. If neither works, stop and tell the user.
+   - If `gh` is unavailable, use the GitHub MCP. If neither works, run [Connect](tickets.md#connect) for GitHub. If that fails too, stop and tell the user.
 4. **End the turn.** The gate is pending until someone approves on GitHub.
 5. **Check approval** (on Resume or when the user asks):
    - Run `git fetch origin <branch>` first. Reviewers can push suggestion commits.
