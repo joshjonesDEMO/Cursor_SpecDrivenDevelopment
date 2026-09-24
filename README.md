@@ -74,7 +74,7 @@ Each repo can adjust the workflow in `specs/constitution.md`. These are the defa
 - Tracker: auto
 ```
 
-- **Enforce gates: on** adds a hook that blocks the agent's file edits before the tasks are approved, and edits outside the approved plan after that. It's a safety net for a skipped step. It doesn't cover shell commands or subagents, and reviewing the spec's log is still the real check. It needs Node 18 or newer.
+- **Enforce gates: on** adds a hook that blocks the agent's file edits before the tasks are approved, and edits outside the approved plan after that. It's a safety net for a skipped step. It doesn't cover shell commands, or the subagents that build parallel tasks, and reviewing the spec's log is still the real check. It needs Node 18 or newer.
 - **pull-request @handle** on an approval setting sends that approval to a GitHub reviewer, such as a product manager or architect, on a draft PR.
 - **ask** on a model setting means the agent asks which model to use for the reviewer and verifier.
 - **Tracker** sets the ticket system, or `auto` detects it from the ticket link.

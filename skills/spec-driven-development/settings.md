@@ -60,7 +60,7 @@ When a deny gets in the way:
 Limits:
 
 - It checks the status on disk, so it catches an agent that forgets the gates, not one that edits its own status. Human review of the spec `Log` is still the control.
-- It covers the agent's file edit tools. Shell commands that write files and subagents (which run as separate conversations) are not covered.
+- It covers the agent's file edit tools. Shell commands that write files aren't covered. A subagent is its own conversation, so it's covered only once it edits a file in an active feature's `specs/<feature-id>/` folder itself. Phase 6 subagents never do, so the parent's diff review is what keeps them inside the file map.
 - It only understands the default `specs/<feature-id>/` layout, and only the workspace root that contains `specs/constitution.md`.
 - It needs `node` 18 or newer on the `PATH`. Any error lets the edit through rather than blocking it.
 

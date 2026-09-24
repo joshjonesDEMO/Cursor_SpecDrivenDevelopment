@@ -16,11 +16,11 @@ The spec is the source of truth, not the prompt. A prompt is temporary and narro
 These hold in every phase.
 
 1. **Name the phase.** Start every reply with `Phase: <name>` and, when stopping, `Gate: <what needs approval>`.
-2. **Gates stop the turn.** At a gate, present the artifact summary and end the turn. A gate passes only through its approval channel from [settings.md](settings.md): an explicit "approved", "yes", or "go" in chat by default, or an approving review on the spec PR. Feedback means revise and present again.
+2. **Gates stop the turn.** At a gate, put the full gate summary in the final message of the turn, not a pointer to earlier text, and end the turn. A gate passes only through its approval channel from [settings.md](settings.md): an explicit "approved", "yes", or "go" in chat by default, or an approving review on the spec PR. Feedback means revise and present again.
 3. **State lives in one field.** The `Status` in `spec.md` is the feature's only state. Change it only as the Status lifecycle below says, and add a dated line to the spec's `Log` each time. A new session trusts this field, not memory.
 4. **No code before tasks approval.** Production code and tests are written only once the status is `Tasks approved` or later. Reading code, running commands, and throwaway spikes that answer a question are allowed earlier. The Skip track is the only exception.
 5. **Never resolve ambiguity silently.** Mark it `[NEEDS CLARIFICATION: <question>]` and run a clarify round (see Phase 3). Any phase may run one.
-6. **Approved artifacts are gated.** Changing this feature's approved spec, plan, or tasks list reopens its gate: roll the status back per the lifecycle table. These edits don't reopen a gate: task state marks, ticket IDs, `Log` and `Clarifications` entries, typos, and fixed links.
+6. **Approved artifacts are gated.** Changing this feature's approved spec, plan, or tasks list reopens its gate: roll the status back per the lifecycle table. These edits don't reopen a gate: task and Definition of done state marks, ticket IDs, `Log` and `Clarifications` entries, typos, and fixed links.
 7. **Spec-anchored.** Approved behavior changes reach the spec through rule 6 before the code changes, and the spec ships in the same PR as the code. A stale spec misleads the next agent more than no spec.
 8. **Stay in scope.** Every change traces to a task, and every task traces to a requirement. Anything else is scope creep. Propose it as a spec change instead.
 9. **Contradictions stop the line.** If implementation shows that the spec or plan is wrong, stop. Mark the task `[?]`, propose the edit, and reopen the owning gate per rule 6. Do not work around it.
@@ -183,7 +183,7 @@ The implementing agent is biased toward its own output. An independent pass does
 1. Run the project's full verification sequence (tests, lint, typecheck, build) as defined by its CI config or scripts.
 2. Dispatch the `spec-verifier` subagent, using the model from the `Verifier model` setting. Give it the spec, plan, and tasks paths, every spec listed in `Amends`, and the diff scope (branch or files).
 3. Fix every `not met` item, violation, and regression, then verify again. Spec drift is a `not met` finding. Resolve it by fixing the code, or by reopening the spec per rule 6. Never by quietly editing the spec. For each `unverifiable` item, add the missing check, or carry it to Gate 4 as a stated gap.
-4. Set status `Delivery pending`.
+4. Tick each Definition of done item in the plan that passed (rule 6 exempts this). Carry any unticked item to Gate 4 as a gap. Set status `Delivery pending`.
 
 **Gate 4: Delivery.** Present:
 
