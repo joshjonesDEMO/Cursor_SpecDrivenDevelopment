@@ -63,10 +63,18 @@ specs/
 
 Run this before Phase 0 on every invocation.
 
-1. Pick the feature. Use the one the user named. Otherwise use the only spec whose status is not `Implemented`, `Superseded`, `Baseline draft`, or `Baseline`. If there are several, ask. If there are none, or the user describes new work, start at Phase 0.
+1. Pick the feature. Use the one the user named. Otherwise use the only spec whose status is not `Implemented`, `Superseded`, `Baseline draft`, or `Baseline`. If there are several, ask. If the user describes new work, start at Phase 0. If there are none and the message does not describe work, run Empty start and stop.
 2. If the spec's `Amends` field names a baseline with status `Baseline draft`, re-present the baseline review gate from [brownfield.md](brownfield.md).
 3. Otherwise go where the lifecycle table says. If the pending gate uses `pull-request` approval, check the PR first. In Implement, any `[?]` task blocks until resolved. Report `[!]` tasks before continuing.
 4. Report the feature, the status, and what is pending, then continue.
+
+## Empty start
+
+Run this only when Resume found nothing to continue and the invoking message does not describe work. A description names an outcome, a change, or a ticket. The command on its own, a greeting, or "help" does not.
+
+Ask what to build: the outcome in one or two sentences, and a ticket link or key if they have one. Then end the turn. Do not scan the repo, pick a track, draft a spec, or fill in the six spec questions.
+
+The reply that supplies that description is the request. Start at Phase 0. A message that already describes the work skips Empty start.
 
 ## Phase 0: Size gate
 

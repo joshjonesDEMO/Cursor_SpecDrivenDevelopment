@@ -45,6 +45,8 @@ Switch to the custom mode, or start with the command:
 /spec-driven-development Add account lockout after repeated failed logins. ENG-1234
 ```
 
+You can also run `/spec-driven-development` on its own. If nothing is already in progress, the agent asks what to build before it starts. Include a ticket link or key when you have one.
+
 Approvals are saved in the spec, so running the command again in a new chat picks up where you left off.
 
 ## What gets written
