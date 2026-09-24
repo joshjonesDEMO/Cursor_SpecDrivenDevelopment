@@ -168,14 +168,14 @@ test("file map parsing stops at the next section and keeps every path", () => {
 });
 
 test("the script fails open on malformed stdin", () => {
-  const run = spawnSync("node", [HOOK], { input: "not json", encoding: "utf8" });
+  const run = spawnSync(process.execPath, [HOOK], { input: "not json", encoding: "utf8" });
   assert.equal(run.status, 0);
   assert.deepEqual(JSON.parse(run.stdout), ALLOW);
 });
 
 test("the script returns a deny decision end to end", () => {
   const run = (rel, content) =>
-    spawnSync("node", [HOOK], {
+    spawnSync(process.execPath, [HOOK], {
       input: JSON.stringify({
         tool_name: "Write",
         conversation_id: "c",
@@ -183,7 +183,6 @@ test("the script returns a deny decision end to end", () => {
         tool_input: { file_path: join(root, rel), ...(content === undefined ? {} : { content }) },
       }),
       encoding: "utf8",
-      env: process.env,
     });
   run("specs/001-lockout/spec.md", spec("Draft"));
   write("specs/001-lockout/spec.md", spec("Draft"));

@@ -66,7 +66,7 @@ export function parseFileMap(markdown) {
     const heading = line.match(/^(#+)\s/);
     if (heading !== null && heading[1].length <= level) break;
     if (!line.trimStart().startsWith("|")) continue;
-    const cell = (line.split("|")[1] ?? "").trim();
+    const cell = line.split("|")[1].trim();
     if (cell === "" || /^:?-+:?$/.test(cell) || cell.toLowerCase() === "file") continue;
     const spans = [...cell.matchAll(/`([^`]+)`/g)].map((m) => m[1]);
     for (const path of spans.length > 0 ? spans : [cell]) entries.push(path.trim().replace(/^\.\//, ""));
