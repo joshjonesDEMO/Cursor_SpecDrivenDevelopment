@@ -17,6 +17,7 @@ Project-wide principles that every spec, plan, and task must respect. Keep this 
 - Tasks approval: chat
 - Critic model: ask
 - Verifier model: ask
+- Tracker: auto
 
 ## Platform
 

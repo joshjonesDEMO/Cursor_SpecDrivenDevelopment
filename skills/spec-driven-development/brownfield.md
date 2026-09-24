@@ -1,6 +1,6 @@
 # Brownfield: spec existing behavior before changing it
 
-Use this on Full track when a change must preserve existing behavior that no spec covers. The goal is a baseline spec that describes what the code does today, so the change spec can say precisely what is added, changed, removed, and unchanged.
+Use this on Full track when a change must preserve existing behavior that no spec covers. The goal is a baseline spec that describes what the code does today, so the change spec can list what is added, changed, removed, and unchanged.
 
 Spec the area of change, not the whole system. Coverage grows one change at a time. If a `Baseline` spec already covers the area, skip extraction: list it in `Amends` and write the delta (step 8).
 

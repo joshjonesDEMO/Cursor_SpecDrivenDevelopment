@@ -1,7 +1,7 @@
 {
   "name": "spec-driven-development",
   "displayName": "Spec-Driven Development",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A phase-gated spec-driven development mode for engineering teams. Turns a feature request or ticket into a reviewed spec, plan, and task list under specs/<feature>/, implements one task at a time, and verifies the result against the spec with an independent subagent. Includes a size gate, clarify pass, brownfield spec extraction, ticket intake/export, per-repo approval settings, and an optional hook that enforces the gates.",
   "author": {
     "name": "Josh Jones"

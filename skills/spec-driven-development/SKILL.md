@@ -1,11 +1,10 @@
 ---
-name: spec-driven-development
-description: Spec-driven development mode for engineering teams. Runs a phase-gated loop (size gate, specify, clarify, plan, tasks, implement, verify) that writes versioned spec.md, plan.md, and tasks.md files under specs/<feature>/ and stops for human approval at each gate. Use when the user invokes /spec-driven-development, asks for spec-driven, spec-first, or spec-anchored development, or wants a reviewed spec and plan before any code is written.
+name: Spec-Driven Development
+description: Approve a spec, plan, and tasks before code
 disable-model-invocation: true
 mode: true
-icon: file-text
+icon: list-checks
 color: blue
-reminder: Spec-driven mode. Open each reply with the current phase. No code until the spec status is Tasks approved, unless the track is Skip. Stop at every gate.
 ---
 
 # Spec-Driven Development
@@ -18,7 +17,7 @@ These hold in every phase.
 
 1. **Name the phase.** Start every reply with `Phase: <name>` and, when stopping, `Gate: <what needs approval>`.
 2. **Gates stop the turn.** At a gate, present the artifact summary and end the turn. A gate passes only through its approval channel from [settings.md](settings.md): an explicit "approved", "yes", or "go" in chat by default, or an approving review on the spec PR. Feedback means revise and present again.
-3. **State lives in one field.** The `Status` in `spec.md` is the feature's only state. Change it exactly as the Status lifecycle below says, and add a dated line to the spec's `Log` each time. A new session trusts this field, not memory.
+3. **State lives in one field.** The `Status` in `spec.md` is the feature's only state. Change it only as the Status lifecycle below says, and add a dated line to the spec's `Log` each time. A new session trusts this field, not memory.
 4. **No code before tasks approval.** Production code and tests are written only once the status is `Tasks approved` or later. Reading code, running commands, and throwaway spikes that answer a question are allowed earlier. The Skip track is the only exception.
 5. **Never resolve ambiguity silently.** Mark it `[NEEDS CLARIFICATION: <question>]` and run a clarify round (see Phase 3). Any phase may run one.
 6. **Approved artifacts are gated.** Changing this feature's approved spec, plan, or tasks list reopens its gate: roll the status back per the lifecycle table. These edits don't reopen a gate: task state marks, ticket IDs, `Log` and `Clarifications` entries, typos, and fixed links.
@@ -54,7 +53,7 @@ specs/
     tasks.md                 # In what steps. Ordered, verifiable, traced to requirements
 ```
 
-- **Feature ID.** Prefer the ticket key plus a slug (`ENG-1234-account-lockout`). Without a ticket, use the next sequential number (`004-account-lockout`). Check both the local `specs/` folder and the default branch on the remote to avoid collisions.
+- **Feature ID.** Prefer the ticket key plus a slug (`ENG-1234-account-lockout`), using the per-tracker shapes in [tickets.md](tickets.md). Without a ticket, use the next sequential number (`004-account-lockout`). Check both the local `specs/` folder and the default branch on the remote to avoid collisions.
 - **Existing frameworks.** If the repo already uses Spec Kit (`.specify/`), Kiro (`.kiro/specs/`), or SpecDD (`*.sdd`), store artifacts where that framework does. Keep this skill's phases, gates, status lifecycle, requirement IDs, and task states. Link existing ADRs from the spec's `Decisions already made` section. Say which framework you detected.
 - **Templates.** Copy from [templates/](templates/) and fill them in. Delete any section with no material content rather than writing "N/A".
 
@@ -88,7 +87,7 @@ State the track and the one-line reason at the top of the reply. For Lite and Fu
 1. **Constitution.** Read `specs/constitution.md` and its `Workflow settings` ([settings.md](settings.md)).
    - **Full track:** the constitution must exist with status `Ratified` before Specify. If it is missing or `Draft`, draft it from [templates/constitution.md](templates/constitution.md), seeded from `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`, and the repo's CI config. Present it at a **Constitution gate**, and set it to `Ratified` on approval.
    - **Lite track:** use the constitution if one exists. Otherwise fall back to `AGENTS.md` and the rules, with default settings.
-2. If the request references a ticket (Linear, Jira, GitHub issue), pull it per [tickets.md](tickets.md).
+2. If the request references a ticket (Linear, Jira, Notion, GitHub, Azure DevOps, or another tracker), pull it per [tickets.md](tickets.md).
 3. Extend the Phase 0 scan into an impact scan. Find existing patterns to reuse, likely touched files, related prior specs under `specs/`, and ripple effects. This stops the spec from duplicating existing code or fighting established conventions.
 4. **Living specs.** If an existing `Baseline` or `Implemented` spec already defines behavior this change touches, list it in the new spec's `Amends` field and write a `Delta from <spec>` section for it (see [brownfield.md](brownfield.md) for the format).
 5. **Brownfield.** On Full track, if the change must preserve existing behavior that no spec covers, run [brownfield.md](brownfield.md) before Specify. On Lite, list the behavior that must not change in the spec's `Must not` section instead.
@@ -198,7 +197,7 @@ If the feedback needs code changes within the approved spec, reset the affected 
 On approval:
 
 1. Apply each approved delta to the spec it amends, so every living spec describes current behavior. This doesn't change the amended spec's status, except that a feature spec whose behavior was fully replaced becomes `Superseded`.
-2. Set status `Implemented`. Open the PR per the team's workflow, or mark the existing spec PR ready for review. Then post the ticket sync from [tickets.md](tickets.md) if a ticket is linked. The specs ship in the same PR as the code.
+2. Set status `Implemented`. Open the PR per the team's workflow, or mark the existing spec PR ready for review. If a ticket is linked, include the tracker's PR-linking reference from [tickets.md](tickets.md) when the PR is created. Then post the ticket sync from [tickets.md](tickets.md) if a ticket is linked. The specs ship in the same PR as the code.
 
 ## Anti-patterns
 

@@ -1,25 +1,25 @@
 # Spec-Driven Development for Cursor
 
-A Cursor plugin that adds a spec-driven development mode. Invoke it with `/spec-driven-development`. The agent then moves a feature through reviewed documents before it writes code, and verifies the result against them afterwards.
+A Cursor mode that turns a feature request into an approved spec, plan, and task list before any code is written, then checks the finished work against that spec.
+
+The spec lives in your repo next to the code, so it carries over between sessions, teammates, and reviews.
+
+## How it works
 
 ```text
-Size gate -> Orient -> Specify -> Clarify -> [Gate 1: spec]
-          -> Plan -> [Gate 2: plan] -> Tasks -> [Gate 3: tasks]
-          -> Implement (one task at a time) -> Verify -> [Gate 4: delivery]
+Size check -> Spec -> [approve] -> Plan -> [approve] -> Tasks -> [approve]
+           -> Build, one task at a time -> Verify against the spec -> [approve] -> PR
 ```
 
-That is the Full track. The Lite track puts the plan and tasks inside `spec.md` and approves all three at Gate 1. The Skip track is for changes too small to need a spec.
+The agent picks a track based on the size of the change, and you can override it:
 
-Artifacts are plain markdown in your repo, versioned with the code:
+| Track | For | Approvals |
+|-------|-----|-----------|
+| Skip | Small, low-risk changes | A quick confirm, no spec |
+| Lite | 1-3 files in one area | Spec, plan, and tasks together, then delivery |
+| Full | 4+ files, API or schema changes, security-sensitive work | Spec, plan, tasks, and delivery separately |
 
-```text
-specs/
-  constitution.md              # project principles and workflow settings
-  ENG-1234-account-lockout/
-    spec.md                    # what and why; holds the feature's Status
-    plan.md                    # how
-    tasks.md                   # in what steps
-```
+Before asking you anything, the agent checks the code for answers, so its questions are the product decisions only you can make. On larger changes, a separate reviewer agent checks the spec for gaps before you approve it. On every change with a spec, a verifier agent checks the finished code against each requirement.
 
 ## Install
 
@@ -35,21 +35,34 @@ Windows (PowerShell):
 git clone https://github.com/joshjonesDEMO/Cursor_SpecDrivenDevelopment "$env:USERPROFILE\.cursor\plugins\local\spec-driven-development"
 ```
 
-Then restart Cursor. Teams can instead add the repo to their plugin marketplace. The optional gate-enforcement hook needs Node 18 or newer on the `PATH`.
+Restart Cursor. **Spec-Driven Development** is then available as a custom mode and as a command. Teams can also add this repo to their plugin marketplace.
 
-## Usage
+## Use
+
+Switch to the custom mode, or start with the command:
 
 ```text
 /spec-driven-development Add account lockout after repeated failed logins. ENG-1234
 ```
 
-The agent recommends a track, drafts the spec, and asks only the questions it can't answer from the code. It stops at each gate for approval. Approvals are recorded in the spec's `Status` field, so running the command again in a later session resumes where the work left off.
+Approvals are saved in the spec, so running the command again in a new chat picks up where you left off.
 
-For existing code without specs, the agent can first extract a baseline spec describing current behavior, so that the change can say exactly what it adds, changes, and must not break.
+## What gets written
+
+```text
+specs/
+  constitution.md              # project principles and workflow settings
+  ENG-1234-account-lockout/
+    spec.md                    # what and why, plus the feature's status
+    plan.md                    # how
+    tasks.md                   # the steps, each with its own check
+```
+
+For existing code with no spec, the agent can first write down what the code does today, so the change can list what it adds, changes, and must keep working.
 
 ## Settings
 
-Each repo configures the workflow in the `## Workflow settings` section of `specs/constitution.md`. These are the defaults:
+Each repo can adjust the workflow in `specs/constitution.md`. These are the defaults:
 
 ```markdown
 - Enforce gates: off
@@ -58,36 +71,36 @@ Each repo configures the workflow in the `## Workflow settings` section of `spec
 - Tasks approval: chat
 - Critic model: ask
 - Verifier model: ask
+- Tracker: auto
 ```
 
-- **`Enforce gates: on`** turns on a hook that blocks the agent's code edits until the tasks are approved, and edits outside the approved file map after that. It catches an agent that forgets the gates. It doesn't replace reviewing the spec's log.
-- **`pull-request @handle`** on any of the three approval settings makes that gate wait for an approving GitHub review from the named people on a draft PR, instead of approval in chat.
-- **`ask`** for a model means the agent asks which model to use the first time it runs that subagent.
+- **Enforce gates: on** adds a hook that blocks the agent's file edits before the tasks are approved, and edits outside the approved plan after that. It's a safety net for a skipped step. It doesn't cover shell commands or subagents, and reviewing the spec's log is still the real check. It needs Node 18 or newer.
+- **pull-request @handle** on an approval setting sends that approval to a GitHub reviewer, such as a product manager or architect, on a draft PR.
+- **ask** on a model setting means the agent asks which model to use for the reviewer and verifier.
+- **Tracker** sets the ticket system, or `auto` detects it from the ticket link.
 
-See [settings.md](skills/spec-driven-development/settings.md) for the details and limits.
+Full details: [settings.md](skills/spec-driven-development/settings.md).
+
+## Ticket integrations
+
+Share a ticket link or key and the agent drafts the spec from it. After approval, it can also create tasks back in your tracker and link the PR.
+
+There are built-in instructions for **Linear**, **Jira Cloud**, **Notion**, **GitHub Issues**, and **Azure DevOps**. They work once that tracker's MCP server is connected in Cursor. Jira, GitHub, and Azure DevOps also work through their CLIs. Other trackers (including self-hosted Jira) work through their MCP server, CLI, or API, and pasted ticket text works anywhere. Details: [tickets.md](skills/spec-driven-development/tickets.md).
 
 ## What's included
 
 | Component | Purpose |
 |-----------|---------|
-| `skills/spec-driven-development` | The mode: phase rules, status lifecycle, gates, tracks |
-| `.../templates/` | Constitution, spec, plan, and tasks templates |
-| `.../brownfield.md` | Baseline spec extraction for existing code |
-| `.../tickets.md` | Ticket intake from Linear, Jira, or GitHub, and task export |
-| `.../settings.md` | Per-repo workflow settings |
-| `agents/spec-critic.md` | Reviews a draft spec cold before approval |
-| `agents/spec-verifier.md` | Verifies the implementation against the spec, requirement by requirement |
-| `hooks/` | Optional gate enforcement (off by default) |
+| `skills/spec-driven-development/` | The mode, templates, and guides for settings, tickets, and existing code |
+| `agents/spec-critic.md` | Reviews a draft spec for gaps |
+| `agents/spec-verifier.md` | Checks the build against the spec |
+| `hooks/` | Optional gate enforcement, off by default |
 
-## Development
+Run the hook's tests with `npm test`.
 
-```bash
-npm test
-```
+## Credits
 
-## Sources
-
-The workflow draws on [SpecDD](https://specdd.ai/), [GitHub Spec Kit](https://github.com/github/spec-kit), the [DataCamp SDD tutorial](https://www.datacamp.com/tutorial/spec-driven-development-with-claude-code), [IBM's SDD overview](https://www.ibm.com/think/topics/spec-driven-development), and [Augment Code's SDD guide](https://www.augmentcode.com/guides/what-is-spec-driven-development).
+Built on ideas from [SpecDD](https://specdd.ai/), [GitHub Spec Kit](https://github.com/github/spec-kit), [DataCamp](https://www.datacamp.com/tutorial/spec-driven-development-with-claude-code), [IBM](https://www.ibm.com/think/topics/spec-driven-development), and [Augment Code](https://www.augmentcode.com/guides/what-is-spec-driven-development).
 
 ## License
 

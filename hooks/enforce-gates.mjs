@@ -205,7 +205,7 @@ async function main() {
   let raw = "";
   process.stdin.setEncoding("utf8");
   for await (const chunk of process.stdin) raw += chunk;
-  let result = ALLOW;
+  let result;
   try {
     result = evaluate(JSON.parse(raw));
   } catch {
