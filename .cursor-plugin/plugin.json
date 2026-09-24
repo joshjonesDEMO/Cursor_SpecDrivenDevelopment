@@ -1,0 +1,23 @@
+{
+  "name": "spec-driven-development",
+  "displayName": "Spec-Driven Development",
+  "version": "0.1.0",
+  "description": "A phase-gated spec-driven development mode for engineering teams. Turns a feature request or ticket into a reviewed spec, plan, and task list under specs/<feature>/, implements one task at a time, and verifies the result against the spec with an independent subagent. Includes a size gate, clarify pass, brownfield spec extraction, and ticket intake/export.",
+  "author": {
+    "name": "Josh Jones"
+  },
+  "license": "MIT",
+  "keywords": [
+    "spec-driven-development",
+    "sdd",
+    "specs",
+    "planning",
+    "requirements",
+    "acceptance-criteria",
+    "verification",
+    "workflow"
+  ],
+  "category": "developer-tools",
+  "skills": "./skills/",
+  "agents": "./agents/"
+}
