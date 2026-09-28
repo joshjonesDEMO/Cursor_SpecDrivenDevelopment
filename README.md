@@ -163,7 +163,7 @@ flowchart TB
   end
 
   tracker["Tracker<br/>Linear · Jira · Notion · GitHub · Azure DevOps<br/>via MCP or CLI"]
-  bindings[("OS temp dir<br/>cursor-sdd-gates/*.json<br/>chat-to-feature bindings")]
+  bindings[("OS temp dir<br/>cursor-sdd-gates/repo/chat<br/>one binding file per chat")]
 
   subgraph repo["Your repo"]
     direction LR

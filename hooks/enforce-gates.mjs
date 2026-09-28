@@ -12,10 +12,10 @@
  */
 
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { isAbsolute, join, relative, sep } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, isAbsolute, join, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ALLOW = { permission: "allow" };
 const PRE_APPROVAL = ["Draft", "Spec approved", "Plan approved"];
@@ -115,27 +115,20 @@ function readText(path) {
   return existsSync(path) ? readFileSync(path, "utf8") : null;
 }
 
-function statePath(root) {
+function sha1(text) {
+  return createHash("sha1").update(text).digest("hex");
+}
+
+function bindingPath(root, conversation) {
   const dir = process.env.SDD_GATES_STATE_DIR ?? join(tmpdir(), "cursor-sdd-gates");
-  mkdirSync(dir, { recursive: true });
-  return join(dir, `${createHash("sha1").update(root).digest("hex")}.json`);
+  return join(dir, sha1(root), sha1(conversation));
 }
 
-function loadBindings(root) {
-  try {
-    return JSON.parse(readFileSync(statePath(root), "utf8"));
-  } catch {
-    return {};
-  }
-}
-
-function setBinding(root, conversation, featureId) {
-  const path = statePath(root);
-  const bindings = loadBindings(root);
-  if (featureId === undefined) delete bindings[conversation];
-  else bindings[conversation] = featureId;
+// Parallel tool calls in one chat run the hook concurrently, so a reader must never see a half-written file.
+function bind(path, featureId) {
+  mkdirSync(dirname(path), { recursive: true });
   const temp = `${path}.${process.pid}.tmp`;
-  writeFileSync(temp, JSON.stringify(bindings));
+  writeFileSync(temp, featureId);
   renameSync(temp, path);
 }
 
@@ -175,24 +168,25 @@ export function evaluate(input) {
   if (guard !== null) return guard;
   if (!parseEnforce(constitution)) return ALLOW;
 
-  const bound = loadBindings(root)[conversation];
+  const binding = bindingPath(root, conversation);
+  const bound = readText(binding);
   const specFolder = relPath.match(/^specs\/([^/]+)\//)?.[1];
   if (relPath.startsWith("specs/")) {
     if (specFolder !== undefined && bound !== specFolder) {
       const writingSpec = relPath === `specs/${specFolder}/spec.md` && typeof input.tool_input.content === "string";
       const specText = writingSpec ? input.tool_input.content : readText(join(root, "specs", specFolder, "spec.md"));
       const folderStatus = specText === null ? null : parseStatus(specText);
-      if (folderStatus === null || isActive(folderStatus)) setBinding(root, conversation, specFolder);
+      if (folderStatus === null || isActive(folderStatus)) bind(binding, specFolder);
     }
     return ALLOW;
   }
 
-  if (bound === undefined) return ALLOW;
+  if (bound === null) return ALLOW;
 
   const spec = readText(join(root, "specs", bound, "spec.md"));
   const status = spec === null ? null : parseStatus(spec);
   if (status === null || !isActive(status)) {
-    setBinding(root, conversation, undefined);
+    rmSync(binding, { force: true });
     return ALLOW;
   }
 
@@ -214,6 +208,14 @@ async function main() {
   process.stdout.write(JSON.stringify(result));
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+function isMain() {
+  try {
+    return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+}
+
+if (isMain()) {
   await main();
 }

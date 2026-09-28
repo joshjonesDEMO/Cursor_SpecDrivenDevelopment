@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, test } from "node:test";
@@ -112,6 +112,16 @@ test("releases the conversation once the feature is implemented", () => {
   assert.deepEqual(call("src/anything.ts"), ALLOW);
 });
 
+test("releasing one conversation leaves other conversations bound", () => {
+  write("specs/001-lockout/spec.md", spec("Draft"));
+  write("specs/002-tweak/spec.md", spec("Draft"));
+  call("specs/001-lockout/spec.md", { conversation: "a", content: spec("Draft") });
+  call("specs/002-tweak/spec.md", { conversation: "b", content: spec("Draft") });
+  write("specs/002-tweak/spec.md", spec("Implemented"));
+  assert.deepEqual(call("src/x.ts", { conversation: "b" }), ALLOW);
+  assert.equal(call("src/x.ts", { conversation: "a" }).permission, "deny");
+});
+
 test("editing a baseline or implemented spec keeps the active feature bound", () => {
   write("specs/003-feature/spec.md", spec("Draft"));
   write("specs/auth-baseline/spec.md", spec("Baseline"));
@@ -171,6 +181,13 @@ test("the script fails open on malformed stdin", () => {
   const run = spawnSync(process.execPath, [HOOK], { input: "not json", encoding: "utf8" });
   assert.equal(run.status, 0);
   assert.deepEqual(JSON.parse(run.stdout), ALLOW);
+});
+
+test("the script runs when invoked through a symlinked plugin folder", () => {
+  const link = join(mkdtempSync(join(tmpdir(), "sdd-link-")), "plugin");
+  symlinkSync(fileURLToPath(new URL("..", import.meta.url)), link, "dir");
+  const run = spawnSync(process.execPath, [join(link, "hooks", "enforce-gates.mjs")], { input: "not json", encoding: "utf8" });
+  assert.equal(run.stdout, '{"permission":"allow"}');
 });
 
 test("the script returns a deny decision end to end", () => {
