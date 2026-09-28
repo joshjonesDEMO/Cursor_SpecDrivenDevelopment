@@ -17,7 +17,7 @@ These hold in every phase.
 
 1. **Name the phase.** Start every reply with `Phase: <name>` and, when stopping, `Gate: <what needs approval>`.
 2. **Gates stop the turn.** At a gate, put the full gate summary in the final message of the turn, not a pointer to earlier text, and end the turn. A gate passes only through its approval channel from [settings.md](settings.md): an explicit "approved", "yes", or "go" in chat by default, or an approving review on the spec PR. Feedback means revise and present again.
-3. **State lives in one field.** The `Status` in `spec.md` is the feature's only state. Change it only as the Status lifecycle below says, and add a dated line to the spec's `Log` each time. A new session trusts this field, not memory.
+3. **State lives in one field.** The `Status` in `spec.md` is the feature's only state. Change it only as the Status lifecycle below says, and each time append `- YYYY-MM-DD. Status: <status>. <note>` to the end of the spec's `Log`. A new session trusts this field, not memory.
 4. **No code before tasks approval.** Production code and tests are written only once the status is `Tasks approved` or later. Reading code, running commands, and throwaway spikes that answer a question are allowed earlier. The Skip track is the only exception.
 5. **Never resolve ambiguity silently.** Mark it `[NEEDS CLARIFICATION: <question>]` and run a clarify round (see Phase 3). Any phase may run one.
 6. **Approved artifacts are gated.** Changing this feature's approved spec, plan, or tasks list reopens its gate: roll the status back per the lifecycle table. These edits don't reopen a gate: task and Definition of done state marks, ticket IDs, `Log` and `Clarifications` entries, typos, and fixed links.
@@ -56,6 +56,7 @@ specs/
 - **Feature ID.** Prefer the ticket key plus a slug (`ENG-1234-account-lockout`), using the per-tracker shapes in [tickets.md](tickets.md). Without a ticket, use the next sequential number (`004-account-lockout`). Check both the local `specs/` folder and the default branch on the remote to avoid collisions.
 - **Existing frameworks.** If the repo already uses Spec Kit (`.specify/`), Kiro (`.kiro/specs/`), or SpecDD (`*.sdd`), store artifacts where that framework does. Keep this skill's phases, gates, status lifecycle, requirement IDs, and task states. Link existing ADRs from the spec's `Decisions already made` section. Say which framework you detected.
 - **Templates.** Copy from [templates/](templates/) and fill them in. Delete any section with no material content rather than writing "N/A".
+- **Artifact check.** [scripts/check.mjs](scripts/check.mjs) checks a feature's artifacts. From the repo root, run `node <this skill's folder>/scripts/check.mjs specs/<feature-id>`. It reports whether `Status` matches the last `Log` status line, any `[NEEDS CLARIFICATION]` markers outside the `Log` and `Clarifications`, and, once tasks exist, the Phase 5 coverage table and gaps. With `--diff`, it also lists every changed or new file outside `specs/` and the file map since the `Diff base` in the `Log`, whichever tool or subagent wrote it. Gitignored files aren't listed. For a feature started before its `Diff base` was recorded, pass the base commit explicitly with `--diff <commit>`. It exits 1 when something needs fixing. Run it before presenting Gates 1 to 4, fix what it reports, and include its result in the gate summary. For each file `--diff` lists that this feature changed, undo the change or propose a plan change per rule 6. Never delete or revert a file this feature didn't change, such as one merged in from the default branch. Report it at the gate instead. It needs `node` 18 or newer, reads only this skill's file names, and `--diff` needs git. Where it can't run, apply the same checks by hand and say so.
 
 **Lite track layout.** A single `spec.md` holds `## Plan` and `## Tasks` sections. The Plan section is the plan, including its file map. The Tasks section uses the same task format, states, and coverage check as [templates/tasks.md](templates/tasks.md). Everywhere this skill says `plan.md` or `tasks.md`, Lite uses those sections.
 
@@ -143,7 +144,7 @@ Write `plan.md` from [templates/plan.md](templates/plan.md). It answers **how**.
 - **Constitution check.** List each principle the plan touches and how it complies. A violation needs an explicit, justified exception or a spec change.
 - **Data shape first.** Name the core types, schema, state, and API contracts before describing logic.
 - **Approach and alternatives.** For a novel or contested decision, compare 2-3 options in a short table and state why you chose one. For routine work, state the approach and move on.
-- **File map.** Every file to create, modify, or test, and what changes in each. This is the implementation's modification boundary.
+- **File map.** Every file to create, modify, or test, and what changes in each, including generated files the change will update (lockfiles, snapshots, codegen output). This is the implementation's modification boundary.
 - **Test strategy.** Which acceptance criteria become which tests, at which level (unit, integration, contract, e2e).
 - **Risks and rollout.** Migration, feature flag, backward compatibility, and rollback, where relevant.
 - **Definition of done.** Concrete checks: tests pass, lint and typecheck clean, specific manual verification.
@@ -156,23 +157,25 @@ Match the repo's existing patterns. A plan that introduces a new pattern must sa
 
 Write `tasks.md` from [templates/tasks.md](templates/tasks.md).
 
-- Each task is the smallest unit that ends in its own check. It names its files, the requirements it covers (`FR-00x`), its dependencies, and its verification step.
+- Each task is the smallest unit that ends in its own check. It names its files, the requirements it covers (`FR-00x`), its dependencies, and its verification step. `Covers` lists only this spec's requirement IDs, plus `BL-` IDs for characterization tasks. Behavior an amended spec keeps is checked through its `Delta` section's `Unchanged` list, not through tasks.
 - Order tasks so that foundations (types, schema, shared components) come first and each later task builds on verified work.
 - Mark a task `[P]` (parallel-safe) only when its file set is disjoint from every other task that could run at the same time. Shared writes run in sequence.
 - Tests for a behavior come in the same task as the behavior, or directly before it.
 - Brownfield characterization tests are the first task group (`Covers: BL-00x`), so current behavior is pinned before anything changes.
 
-Run the coverage check and record the result in `tasks.md`:
+Run the artifact check and record its coverage table and lines in the `Coverage check` section of `tasks.md`. It flags:
 
-- Every requirement maps to at least one task. A gap means missing work.
-- Every task maps to at least one requirement. An orphan task means scope creep, or a missing requirement that belongs in the spec.
-- Every file in the plan's file map is touched by some task, and no task touches a file outside the map.
+- A requirement with no task. That means missing work.
+- A task that covers no requirement. That means scope creep, or a missing requirement that belongs in the spec.
+- A task that covers a requirement ID the spec doesn't define.
+- A file map entry that no task touches, or a task file outside the map.
+- A task line it can't parse, a task with no files, or a spec with no requirement lines it recognizes. Rewrite them in the template's format.
 
 **Gate 3: Tasks approval.** Present the task list, parallel groups, and coverage result, and offer ticket export per [tickets.md](tickets.md). On approval, set status `Tasks approved`.
 
 ## Phase 6: Implement
 
-Set status `In progress` when the first task starts. Work one task at a time, or a small related group, in order.
+Set status `In progress` when the first task starts. The first time, record `Diff base: <git rev-parse HEAD>` in that `Log` line. The artifact check's `--diff` compares against it. Before recording it, `git status --porcelain` must show nothing outside `specs/`. Otherwise ask the user to commit or stash those changes first. Work one task at a time, or a small related group, in order.
 
 1. Re-read the task, its requirements, and the relevant acceptance criteria.
 2. Write the test first when the project has a test suite. Watch it fail for the right reason.
@@ -182,14 +185,14 @@ Set status `In progress` when the first task starts. Work one task at a time, or
 
 Task states: `[ ]` open, `[x]` done (check passed), `[-]` skipped (reason required), `[!]` blocked, `[?]` needs a decision.
 
-**Parallel tasks.** For a `[P]` group, delegate each task to a subagent, in an isolated worktree when available. Give each one the spec, plan, and tasks paths, its exact file set, and its verification step. Subagents must not edit anything under `specs/`. The parent reviews each diff, merges it, and ticks the task. Merge the whole group before starting the next.
+**Parallel tasks.** For a `[P]` group, delegate each task to a subagent, in an isolated worktree when available. Give each one the spec, plan, and tasks paths, its exact file set, and its verification step. Subagents must not edit anything under `specs/`. The parent reviews each diff, merges it, and ticks the task. Merge the whole group, then run the artifact check with `--diff` and resolve what it lists before starting the next group.
 
 ## Phase 7: Verify
 
 The implementing agent is biased toward its own output. An independent pass does the final check.
 
-1. Run the project's full verification sequence (tests, lint, typecheck, build) as defined by its CI config or scripts.
-2. Dispatch the `spec-verifier` subagent, using the model from the `Verifier model` setting. Give it the spec, plan, and tasks paths, every spec listed in `Amends`, and the diff scope (branch or files).
+1. Run the project's full verification sequence (tests, lint, typecheck, build) as defined by its CI config or scripts, and the artifact check with `--diff`.
+2. Dispatch the `spec-verifier` subagent, using the model from the `Verifier model` setting. Give it the spec, plan, and tasks paths, every spec listed in `Amends`, the diff scope (branch or files), and the artifact check command.
 3. Fix every `not met` item, violation, and regression, then verify again. Spec drift is a `not met` finding. Resolve it by fixing the code, or by reopening the spec per rule 6. Never by quietly editing the spec. For each `unverifiable` item, add the missing check, or carry it to Gate 4 as a stated gap.
 4. Tick each Definition of done item in the plan that passed (rule 6 exempts this). Carry any unticked item to Gate 4 as a gap. Set status `Delivery pending`.
 
@@ -218,4 +221,5 @@ On approval:
 
 - `spec-critic` subagent reads a draft spec cold and finds ambiguity before Gate 1. Read-only.
 - `spec-verifier` subagent checks the implementation against the spec, requirement by requirement, in Phase 7. It runs checks but does not edit files.
+- `scripts/check.mjs` checks coverage, status, clarification markers, and changed files against the artifacts before each gate. It edits nothing.
 - An optional hook enforces rule 4 and the file map when `Enforce gates: on` (see [settings.md](settings.md)). If it denies an edit, follow its message: finish the current gate, or propose a plan change. Never route the edit through the shell or a subagent to get around it.

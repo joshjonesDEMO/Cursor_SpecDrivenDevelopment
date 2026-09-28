@@ -29,12 +29,16 @@ States: `[ ]` open, `[x]` done (check passed), `[-]` skipped (reason required), 
 
 ## Coverage check
 
+<!-- Paste the coverage table and lines printed by the skill's scripts/check.mjs. -->
+
 | Requirement | Tasks |
 |-------------|-------|
 | FR-001 | T001 |
 | FR-002 | T002 |
 | FR-003 | T003 |
 
-- Requirements without a task: <none>
-- Tasks without a requirement: <none>
-- Plan files not touched by any task: <none>
+- Requirements without a task: none
+- Tasks without a requirement: none
+- Tasks covering unknown requirements: none
+- File map entries without a task: none
+- Task files outside the file map: none

@@ -17,81 +17,17 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  APPROVED,
+  PRE_APPROVAL,
+  inFileMap,
+  isActive,
+  parseEnforce,
+  parseFileMap,
+  parseStatus,
+} from "../skills/spec-driven-development/scripts/artifacts.mjs";
+
 const ALLOW = { permission: "allow" };
-const PRE_APPROVAL = ["Draft", "Spec approved", "Plan approved"];
-const APPROVED = ["Tasks approved", "In progress", "Delivery pending"];
-const KNOWN = [...PRE_APPROVAL, ...APPROVED, "Implemented", "Superseded", "Baseline draft", "Baseline"].sort(
-  (a, b) => b.length - a.length,
-);
-
-function stripMarkup(text) {
-  return text.replace(/[*`]/g, "").trim();
-}
-
-function stripComments(markdown) {
-  return markdown.replace(/<!--[\s\S]*?-->/g, "");
-}
-
-function settingValue(markdown, key) {
-  for (const line of stripComments(markdown).split("\n")) {
-    const cleaned = stripMarkup(line).replace(/^[-+]\s*/, "");
-    const match = cleaned.match(/^([^:]+):\s*(.*)$/);
-    if (match !== null && match[1].trim().toLowerCase() === key.toLowerCase()) return match[2].trim();
-  }
-  return null;
-}
-
-export function parseEnforce(constitution) {
-  return (settingValue(constitution, "Enforce gates") ?? "").split(/\s/)[0].toLowerCase() === "on";
-}
-
-export function parseStatus(spec) {
-  const value = settingValue(spec, "Status");
-  if (value === null || value.includes("|")) return null;
-  const lower = value.toLowerCase();
-  return KNOWN.find((status) => lower.startsWith(status.toLowerCase())) ?? null;
-}
-
-function isActive(status) {
-  return PRE_APPROVAL.includes(status) || APPROVED.includes(status);
-}
-
-export function parseFileMap(markdown) {
-  const lines = stripComments(markdown).split("\n");
-  const start = lines.findIndex((line) => /^#{2,4}\s+File map\b/i.test(line));
-  if (start === -1) return [];
-  const level = lines[start].match(/^#+/)[0].length;
-  const entries = [];
-  for (const line of lines.slice(start + 1)) {
-    const heading = line.match(/^(#+)\s/);
-    if (heading !== null && heading[1].length <= level) break;
-    if (!line.trimStart().startsWith("|")) continue;
-    const cell = line.split("|")[1].trim();
-    if (cell === "" || /^:?-+:?$/.test(cell) || cell.toLowerCase() === "file") continue;
-    const spans = [...cell.matchAll(/`([^`]+)`/g)].map((m) => m[1]);
-    for (const path of spans.length > 0 ? spans : [cell]) entries.push(path.trim().replace(/^\.\//, ""));
-  }
-  return entries;
-}
-
-function globToRegExp(glob) {
-  const escaped = glob.replace(/[.+^${}()|[\]\\?]/g, "\\$&");
-  const pattern = escaped
-    .replace(/\*\*\//g, "\u0001")
-    .replace(/\*\*/g, "\u0000")
-    .replace(/\*/g, "[^/]*")
-    .replace(/\u0001/g, "(?:.*/)?")
-    .replace(/\u0000/g, ".*");
-  return new RegExp(`^${pattern}$`);
-}
-
-export function inFileMap(relPath, entries) {
-  return entries.some((entry) => {
-    if (entry.includes("*")) return globToRegExp(entry).test(relPath);
-    const dir = entry.replace(/\/$/, "");
-    return relPath === dir || relPath.startsWith(`${dir}/`);
-  });
-}
 
 export function decide({ relPath, featureId, status, fileMap }) {
   if (PRE_APPROVAL.includes(status)) {

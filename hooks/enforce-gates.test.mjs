@@ -6,7 +6,8 @@ import { join } from "node:path";
 import { beforeEach, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { evaluate, inFileMap, parseEnforce, parseFileMap, parseStatus } from "./enforce-gates.mjs";
+import { inFileMap, parseEnforce, parseFileMap, parseStatus } from "../skills/spec-driven-development/scripts/artifacts.mjs";
+import { evaluate } from "./enforce-gates.mjs";
 
 const HOOK = fileURLToPath(new URL("./enforce-gates.mjs", import.meta.url));
 const ALLOW = { permission: "allow" };

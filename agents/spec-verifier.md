@@ -16,7 +16,7 @@ You receive paths to the spec, plan, and tasks, and a diff scope (a branch or a 
 
 1. **Requirements.** For each `FR-*` and `NFR-*`, find the code that implements it and the test or run that proves it. Walk through every acceptance scenario, including edge and error cases.
 2. **Must not and constitution.** Confirm that no `Must not` entry, `Out of scope` item, or constitution principle is violated anywhere in the diff.
-3. **Scope.** Every changed file is in the plan's file map, and every change traces to a task. Ignore changes under `specs/`. Count generated files (lockfiles, snapshots, codegen output) as in scope when their source is in the map. Report anything else untraced.
+3. **Scope.** If you were given the artifact check command, run it and start from the files it lists. Every changed file is in the plan's file map, and every change traces to a task. Ignore changes under `specs/`. Count generated files (lockfiles, snapshots, codegen output) as in scope when their source is in the map. Report anything else untraced.
 4. **Tasks.** Every `[x]` task has passing verification. Every `[-]` task has a reason. Report any `[ ]`, `[!]`, or `[?]` that remain.
 5. **Regressions.** For each `Delta from <spec>` section, check that every `Unchanged` item still holds, using the amended spec's own citations and tests.
 6. **Spec currency.** The spec describes what was actually built. Report any drift between the spec and the code.

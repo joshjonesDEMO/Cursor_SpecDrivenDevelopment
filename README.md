@@ -63,7 +63,7 @@ The agent picks a track based on the size of the change, and you can override it
 | Lite | 1-3 files in one area | Spec, plan, and tasks together, then delivery |
 | Full | 4+ files, API or schema changes, security-sensitive work | Spec, plan, tasks, and delivery separately |
 
-Before asking you anything, the agent checks the code for answers, so its questions are the product decisions only you can make. On larger changes, a separate reviewer agent checks the spec for gaps before you approve it. On every change with a spec, a verifier agent checks the finished code against each requirement.
+Before asking you anything, the agent checks the code for answers, so its questions are the product decisions only you can make. On larger changes, a separate reviewer agent checks the spec for gaps before you approve it. On every change with a spec, a verifier agent checks the finished code against each requirement. Before each approval, a script checks the spec's status and open questions, and once tasks exist, that every requirement has one. At delivery it checks that every changed file is in the approved plan.
 
 ## Install
 
@@ -120,7 +120,7 @@ Each repo can adjust the workflow in `specs/constitution.md`. These are the defa
 - Tracker: auto
 ```
 
-- **Enforce gates: on** adds a hook that blocks the agent's file edits before the tasks are approved, and edits outside the approved plan after that. It's a safety net for a skipped step. It doesn't cover shell commands, or the subagents that build parallel tasks, and reviewing the spec's log is still the real check. It needs Node 18 or newer.
+- **Enforce gates: on** adds a hook that blocks the agent's file edits before the tasks are approved, and edits outside the approved plan after that. It's a safety net for a skipped step. It doesn't see shell commands or the subagents that build parallel tasks. The artifact check catches their edits afterwards by comparing the diff with the approved plan. Reviewing the spec's log is still the real check. It needs Node 18 or newer.
 - **pull-request @handle** on an approval setting sends that approval to a GitHub reviewer, such as a product manager or architect, on a draft PR.
 - **ask** on a model setting means the agent asks which model to use for the reviewer and verifier.
 - **Tracker** sets the ticket system, or `auto` detects it from the ticket link.
@@ -140,6 +140,7 @@ If the tracker isn't connected yet, the agent offers to install its Cursor plugi
 | Component | Purpose |
 |-----------|---------|
 | `skills/spec-driven-development/` | The mode, templates, and guides for settings, tickets, and existing code |
+| `skills/spec-driven-development/scripts/` | Checks a spec's coverage, status, and changed files against the plan |
 | `agents/spec-critic.md` | Reviews a draft spec for gaps |
 | `agents/spec-verifier.md` | Checks the build against the spec |
 | `hooks/` | Optional gate enforcement, off by default |
@@ -150,7 +151,7 @@ How the pieces connect, where state lives, and how approvals flow:
 flowchart TB
   subgraph plugin["Plugin repo · registered by .cursor-plugin/plugin.json"]
     direction LR
-    skill["skills/spec-driven-development/<br/>SKILL.md: mode + command<br/>settings · tickets · brownfield · templates"]
+    skill["skills/spec-driven-development/<br/>SKILL.md: mode + command<br/>settings · tickets · brownfield · templates<br/>scripts/check.mjs: artifact check"]
     critic["agents/spec-critic.md<br/>read-only spec review"]
     verifier["agents/spec-verifier.md<br/>checks build against spec"]
     hook["hooks/enforce-gates.mjs<br/>preToolUse on Write | Delete<br/>off unless Enforce gates: on"]
@@ -188,7 +189,7 @@ flowchart TB
   hook ==>|"allow or deny agent edit"| code
 ```
 
-Run the hook's tests with `npm test`.
+Run the tests with `npm test`.
 
 ## License
 
