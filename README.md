@@ -81,6 +81,8 @@ git clone https://github.com/joshjonesDEMO/Cursor_SpecDrivenDevelopment "$env:US
 
 Restart Cursor. **Spec-Driven Development** is then available as a custom mode and as a command. Teams can also add this repo to their plugin marketplace.
 
+Install it from one source only. If both a local clone and a marketplace install are present, Cursor loads both, so the mode appears twice and both copies of the gate hook run on every edit. Uninstall one in Cursor Settings, under Plugins.
+
 ## Use
 
 Switch to the custom mode, or start with the command:
