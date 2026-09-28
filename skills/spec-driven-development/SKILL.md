@@ -120,7 +120,7 @@ Requirement quality bar:
 - Bad: `The system should robustly handle all authentication edge cases.`
 - `Must not` entries prevent plausible mistakes. Don't restate the inverse of a `Must`.
 
-On Full track, run the `spec-critic` subagent before Clarify (optional on Lite), using the model from the `Critic model` setting. Give it the spec path, the constitution path, and the impact scan summary. Fold in the findings that change behavior, tests, security, or architecture.
+On Full track, run the `spec-critic` subagent before Clarify (optional on Lite), using the model from the `Critic model` setting. Give it the spec path, the constitution path, and the impact scan summary. Fold in the findings that change behavior, tests, security, or architecture. If it can't be dispatched, run its checks in context, log them as a self-check, and say at Gate 1 that the spec had no independent review.
 
 ## Phase 3: Clarify
 
@@ -192,8 +192,8 @@ Task states: `[ ]` open, `[x]` done (check passed), `[-]` skipped (reason requir
 The implementing agent is biased toward its own output. An independent pass does the final check.
 
 1. Run the project's full verification sequence (tests, lint, typecheck, build) as defined by its CI config or scripts, and the artifact check with `--diff`.
-2. Dispatch the `spec-verifier` subagent, using the model from the `Verifier model` setting. Give it the spec, plan, and tasks paths, every spec listed in `Amends`, the diff scope (branch or files), and the artifact check command.
-3. Fix every `not met` item, violation, and regression, then verify again. Spec drift is a `not met` finding. Resolve it by fixing the code, or by reopening the spec per rule 6. Never by quietly editing the spec. For each `unverifiable` item, add the missing check, or carry it to Gate 4 as a stated gap.
+2. Dispatch the `spec-verifier` subagent, using the model from the `Verifier model` setting. Give it the spec, plan, and tasks paths, every spec listed in `Amends`, the diff scope (branch or files), and the artifact check command. If it can't be dispatched, run its checks in context, but log and present them as a self-check, not an independent verification. Leave the Definition of done items that name `spec-verifier` unticked, carry them to Gate 4 as gaps, and offer to run `spec-verifier` from a new chat.
+3. Fix every `not met` item, violation, and regression, then verify again. Spec drift is a `not met` finding. Resolve it by fixing the code, or by reopening the spec per rule 6. Never by quietly editing the spec. For each `unverifiable` item, add the missing check, or carry it to Gate 4 as a stated gap. If a requirement is still `not met` after two fixes, stop patching. Write the assumption both fixes shared into the `Log` and check it against the spec and plan. If the spec or plan is what's wrong, stop per rule 9. Otherwise correct the assumption and make one more fix. If that fails too, mark the task `[!]`, stop, and bring the requirement to the user.
 4. Tick each Definition of done item in the plan that passed (rule 6 exempts this). Carry any unticked item to Gate 4 as a gap. Set status `Delivery pending`.
 
 **Gate 4: Delivery.** Present:

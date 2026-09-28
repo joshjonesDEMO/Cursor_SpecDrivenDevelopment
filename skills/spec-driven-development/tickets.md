@@ -65,12 +65,14 @@ Offered at Gate 3 on Full track and Gate 1 on Lite. Create tickets only after th
 - **One ticket per task group.** For teams that track milestones.
 - **Checklist on the source ticket.** The lightest option.
 
+Before writing, check what an earlier export already created. List the source ticket's existing children or linked items, and match them by their `<T00x>` or group-name title. Reuse each match and write its ID back, skip checklist items already on the source ticket, and create only what's missing. That lets an interrupted export run again without duplicates.
+
 For each new ticket:
 
 - Title: `<T00x> <task title>`
 - Body: a link to `specs/<feature>/tasks.md`, the requirements it covers, its files, and its verification step.
 - Type and parent: follow the tracker section below. Child types depend on the source ticket's level.
-- Write the new ticket ID onto the task line: `- [ ] **T002** ... (ENG-1234)`.
+- Write the new ticket ID onto the task line: `- [ ] **T002** ... (ENG-1234)`. Write a group ticket's ID onto its group heading.
 
 If a PR already exists (the `pull-request` approval channel opens one at Gate 1), appending the new tickets' closing references to its body is part of the same confirmed export write. Read the current body with `gh pr view <url> --json body --jq .body`, add the references, and write the whole body back with `gh pr edit <url> --body-file -`, so the existing text is kept.
 

@@ -24,9 +24,9 @@ You receive paths to the spec, plan, and tasks, and a diff scope (a branch or a 
 
 ## Verdicts
 
-- **met.** You found the implementation *and* positive evidence: a passing test that asserts the behavior, or a command you ran.
+- **met.** You found the implementation *and* positive evidence: a passing test that calls the code the way its users do and asserts the exact expected result from the acceptance criterion, or a command you ran whose output shows that result. A test that would still pass if the implementation returned `undefined` or did nothing is not evidence.
 - **not met.** You found positive evidence that it is missing, wrong, or incomplete.
-- **unverifiable.** You could not establish it either way: no test exists, the command failed to run, or it needs an environment you don't have.
+- **unverifiable.** You could not establish it either way: no test asserts the behavior, the command failed to run, or it needs an environment you don't have.
 
 `unverifiable` is not `not met`. Say what you tried and what would settle it. Reporting "couldn't check" as a failure hides real gaps behind false ones, and reporting it as a pass is worse.
 
